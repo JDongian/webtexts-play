@@ -1,3 +1,15 @@
+function isComplete(arr) {
+    if (arr.length != 0) {
+        return false;
+    }
+    for (var i = 0, len = arr.length; i < len; i++) {
+        if (typeof arr[i] === "undefined") {
+            return false;
+        }
+    }
+    return true;
+}
+
 function trim (str) {
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
@@ -10,6 +22,14 @@ function getQuestionByIndex(i) {
     return $("ul.questionset li:nth-child(" + i + ") ul");
 }
 
+function getQuestionOptions(i) {
+    texts = [];
+    getQuestionByIndex(index).children().slice(0, -1).each(function(i) {
+        //texts.push($(this).children().last().html());
+        texts.push(trim($(this).children().last().html()));
+    });
+    return texts;
+ }
 
 function chooseAnswer(li) {
     li.children().last().click(); // label
@@ -32,41 +52,54 @@ function reset() {
     $("div.clear-answers > form > a.submit").trigger("click");
 }
 
-function tryAnswers(q, i, texts, agg) {
-    setTimeout(function () {
-        text = texts[i];
-        
-        chooseVerifyReset(q, text, );
-        chooseAnswerByLabelText(q, text);
+// cb(success)
+function chooseVerifyReset(q, opt, cb) {
+    // Hopefully completes in the timeout (!!!)
+    chooseAnswerByLabelText(q, opt); 
+    setTimeout(function() {
+        var success = checkResult();
+        reset(); // Hopefully completes in the timeout (!!!)
+        setTimeout(function() {
+            cb(success);
+        }, 1000);
+    }, 1000);
+}
 
-        if (i < texts.length) {
-            tryAnswers(q, i+1, texts, agg);
+//cb(correctOption)
+function tryOptions(q, i, texts, cb) {
+    text = texts[i];
+    
+    chooseVerifyReset(q, text, function(success) {
+        if (success) {
+            cb(text);
         } else {
+            if (i < texts.length) {
+                tryOptions(q, i+1, texts, cb);
+            }
         }
-    }, 1000)
-}
-
-function determineAnswer(index) {
-    texts = [];
-    getQuestionByIndex(index).children().slice(0, -1).each(function(i) {
-        texts.push(trim($(this).children().last().html()));
     });
-    //console.dir(texts);
-    agg = []
-    tryAnswers(index, 0, texts, agg);
-    return agg;
 }
 
+// cb(answers)
+function determineAnswer(index, answers, cb) {
+    texts = getQuestionOptions(index);
+    tryOptions(index, 0, texts, function(ans) {
+        answers[index] = ans;
+        if (answers.length === texts.length && isComplete(answers)) {
+            cb(answers);
+        }
+    });
+}
+
+// cb(answers)
 function determineAnswers(qs, cb) {
     answers = [];
-    qs.each(function (i) {
-        answers.push($(this).determineAnswer(i));
+    qs.each(function (q) {
+        determineAnswer(q, answers, cb);
     });
-    
-    // Possibly busy wait here
-    // possibly have [i, answer] pairs?
+}
 
-    cb(answers);
+function chooseAnswers(answers) {
 }
 
 $(".toggle-study-questions").focus();
