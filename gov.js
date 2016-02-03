@@ -1,4 +1,5 @@
 var TIMEOUT = 800;
+var LONG_TIMEOUT = 3000;
 
 function isComplete(arr) {
     if (arr.length != 0) {
@@ -118,15 +119,36 @@ function determineAnswers(cb) {
 
 function chooseAnswers(answers) {
     console.log("STATUS: SENDING ANSWERS");
-    //console.dir(answers);
     answers.forEach(function(answer, index) {
         chooseAnswerByLabelText(index+1, answer);
     });
 }
 
-//$(".toggle-study-questions").focus();
-//$(".toggle-study-questions").trigger("click");
-//
-//determineAnswers($(".questionset ul"), chooseAnswers);
+function next() {
+    console.log("STATUS: NEXT PAGE");
+    $("div.next a span").click(); 
+}
 
-determineAnswers(chooseAnswers);
+function finishCurrent(cb) {
+    // Seeing things is nice
+    $(".toggle-study-questions").focus();
+    $(".toggle-study-questions").trigger("click");
+
+    determineAnswers(function (answers) {
+        chooseAnswers(answers);
+        setTimeout(cb(), TIMEOUT);
+        //cb();
+    });
+}
+
+function finishAll() {
+    finishCurrent(function() {
+        next();
+        setTimeout(function() {
+            finishAll();
+        }, LONG_TIMEOUT);
+    });
+}
+
+//finishAll();
+finishCurrent(next);
