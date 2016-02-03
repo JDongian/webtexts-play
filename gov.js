@@ -1,3 +1,5 @@
+var TIMEOUT = 800;
+
 function isComplete(arr) {
     if (arr.length != 0) {
         return false;
@@ -22,7 +24,7 @@ function getQuestionByIndex(i) {
     return $("ul.questionset li:nth-child(" + i + ") ul");
 }
 
-function getQuestionOptions(i) {
+function getQuestionOptions(index) {
     texts = [];
     getQuestionByIndex(index).children().slice(0, -1).each(function(i) {
         //texts.push($(this).children().last().html());
@@ -55,14 +57,16 @@ function reset() {
 // cb(success)
 function chooseVerifyReset(q, opt, cb) {
     // Hopefully completes in the timeout (!!!)
+    console.log("STATUS: CHOOSING ANSWER (" + opt.slice(0,16) + "...)");
     chooseAnswerByLabelText(q, opt); 
     setTimeout(function() {
         var success = checkResult();
         reset(); // Hopefully completes in the timeout (!!!)
+        console.log("STATUS: RESETTING");
         setTimeout(function() {
             cb(success);
-        }, 1000);
-    }, 1000);
+        }, TIMEOUT);
+    }, TIMEOUT);
 }
 
 //cb(correctOption)
@@ -73,6 +77,7 @@ function tryOptions(q, i, texts, cb) {
         if (success) {
             cb(text);
         } else {
+            console.log("STATUS: RETRYING");
             if (i < texts.length) {
                 tryOptions(q, i+1, texts, cb);
             }
@@ -84,25 +89,44 @@ function tryOptions(q, i, texts, cb) {
 function determineAnswer(index, answers, cb) {
     texts = getQuestionOptions(index);
     tryOptions(index, 0, texts, function(ans) {
-        answers[index] = ans;
-        if (answers.length === texts.length && isComplete(answers)) {
-            cb(answers);
-        }
+        console.log("STATUS: SAVING ANSWER");
+        answers[index-1] = ans;
+        cb(answers, index);
     });
+}
+
+function answeringChain(cb, count) {
+    return function(answers, index) {
+        index++;
+        if (index < count) {
+            console.log("STATUS: NEXT QUESTION (" + index + ")");
+            determineAnswer(index, answers, answeringChain(cb, count));
+        } else {
+            console.log("STATUS: LAST QUESTION (" + index + ")");
+            setTimeout(determineAnswer(index, answers, cb), TIMEOUT);
+        }
+    }
 }
 
 // cb(answers)
-function determineAnswers(qs, cb) {
+function determineAnswers(cb) {
     answers = [];
-    qs.each(function (q) {
-        determineAnswer(q, answers, cb);
-    });
+    var count = $(".questionset ul").length;
+    // We need these to be serial.
+    determineAnswer(1, answers, answeringChain(cb, count));
 }
 
 function chooseAnswers(answers) {
+    console.log("STATUS: SENDING ANSWERS");
+    //console.dir(answers);
+    answers.forEach(function(answer, index) {
+        chooseAnswerByLabelText(index+1, answer);
+    });
 }
 
-$(".toggle-study-questions").focus();
-$(".toggle-study-questions").trigger("click");
+//$(".toggle-study-questions").focus();
+//$(".toggle-study-questions").trigger("click");
+//
+//determineAnswers($(".questionset ul"), chooseAnswers);
 
-determineAnswers($(".questionset ul"), chooseAnswers);
+determineAnswers(chooseAnswers);
