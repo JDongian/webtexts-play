@@ -140,7 +140,7 @@ function finishCurrent(cb) {
         //cb();
     });
 }
-
+/*
 function finishAll() {
     finishCurrent(function() {
         next();
@@ -149,6 +149,6 @@ function finishAll() {
         }, LONG_TIMEOUT);
     });
 }
-
+*/
 //finishAll();
-finishCurrent(next);
+finishCurrent(function() {});
