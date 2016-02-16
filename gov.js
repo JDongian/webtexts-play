@@ -1,4 +1,8 @@
-var TIMEOUT = 800;
+/* "This is a clear and accurate picture of depiction of my javascript skills"
+ * -- said no one ever
+ */
+
+var TIMEOUT = 1500;
 var LONG_TIMEOUT = 3000;
 
 function isComplete(arr) {
@@ -22,7 +26,7 @@ function checkResult() {
 }
 
 function getQuestionByIndex(i) {
-    return $("ul.questionset li:nth-child(" + i + ") ul");
+    return $("form.question-set-form ul.questionset li:nth-child(" + i + ") ul");
 }
 
 function getQuestionOptions(index) {
@@ -31,6 +35,8 @@ function getQuestionOptions(index) {
         //texts.push($(this).children().last().html());
         texts.push(trim($(this).children().last().html()));
     });
+    //console.log("QUESTION OPTIONS for (" + index + ")");
+    //console.dir(texts);
     return texts;
  }
 
@@ -41,6 +47,7 @@ function chooseAnswer(li) {
 
 function chooseAnswerByLabelText(index, text) {
     var match;
+    console.log("STATUS: MATCHING HTML FOR: " + text.slice(0,16) + "...)");
     getQuestionByIndex(index).children().slice(0, -1)
         .each(function() {
         if (trim($(this).children().last().html()) == text) {
@@ -58,7 +65,7 @@ function reset() {
 // cb(success)
 function chooseVerifyReset(q, opt, cb) {
     // Hopefully completes in the timeout (!!!)
-    console.log("STATUS: CHOOSING ANSWER (" + opt.slice(0,16) + "...)");
+    console.log("STATUS: CHOOSING ANSWER (" + opt.slice(0,32) + "...)");
     chooseAnswerByLabelText(q, opt); 
     setTimeout(function() {
         var success = checkResult();
@@ -112,7 +119,7 @@ function answeringChain(cb, count) {
 // cb(answers)
 function determineAnswers(cb) {
     answers = [];
-    var count = $(".questionset ul").length;
+    var count = $("form.question-set-form ul.questionset ul").length;
     // We need these to be serial.
     determineAnswer(1, answers, answeringChain(cb, count));
 }
