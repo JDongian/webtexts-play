@@ -2,8 +2,8 @@
  * -- said no one ever
  */
 
-var TIMEOUT = 1500;
-var LONG_TIMEOUT = 3000;
+var TIMEOUT = 1800;
+var LONG_TIMEOUT = 8000;
 
 function isComplete(arr) {
     if (arr.length != 0) {
@@ -143,7 +143,7 @@ function finishCurrent(cb) {
 
     determineAnswers(function (answers) {
         chooseAnswers(answers);
-        setTimeout(cb(), TIMEOUT);
+        setTimeout(cb(), LONG_TIMEOUT);
         //cb();
     });
 }
@@ -158,4 +158,5 @@ function finishAll() {
 }
 */
 //finishAll();
-finishCurrent(function() {});
+//finishCurrent(function() {}); // no auto-next
+finishCurrent(function() { setTimeout(next, LONG_TIMEOUT); }); // auto-next
